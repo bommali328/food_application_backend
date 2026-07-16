@@ -3,38 +3,38 @@ package com.ng.food.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "orders") // 'ORDER' కీవర్డ్ కన్ఫ్లిక్ట్ రాకుండా టేబుల్ పేరు 'orders' గా మార్చాం
+@Table(name = "customer_orders")
 public class Order {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private Long orderId;
 	private String customerName;
-	private String mobileNumber;
-	private String deliveryAddress;
+	private String customerMobile;
+
+	@Column(length = 500)
+	private String address;
+
+	@Column(length = 500)
+	private String orderDetails;
+
 	private double totalAmount;
-	private String status;
+	private String paymentMode;
+	private String paymentStatus;
+	private String transactionId;
 
-	private String paymentMode; // ఉదా: "COD" లేదా "ONLINE"
-	private String paymentStatus; // ఉదా: "PENDING" లేదా "COMPLETED"
-	private String transactionId; // ఆన్‌లైన్ పేమెంట్ అయితే ట్రాన్సాక్షన్ ఐడి (ఆప్షనల్)
+	// Default Constructor
+	public Order() {
+	}
 
-	// Getters & Setters
+	// Getters and Setters
 	public Long getId() {
 		return id;
 	}
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public Long getOrderId() {
-		return orderId;
-	}
-
-	public void setOrderId(Long orderId) {
-		this.orderId = orderId;
 	}
 
 	public String getCustomerName() {
@@ -45,20 +45,28 @@ public class Order {
 		this.customerName = customerName;
 	}
 
-	public String getMobileNumber() {
-		return mobileNumber;
+	public String getCustomerMobile() {
+		return customerMobile;
 	}
 
-	public void setMobileNumber(String mobileNumber) {
-		this.mobileNumber = mobileNumber;
+	public void setCustomerMobile(String customerMobile) {
+		this.customerMobile = customerMobile;
 	}
 
-	public String getDeliveryAddress() {
-		return deliveryAddress;
+	public String getAddress() {
+		return address;
 	}
 
-	public void setDeliveryAddress(String deliveryAddress) {
-		this.deliveryAddress = deliveryAddress;
+	public void setAddress(String address) {
+		this.address = address;
+	}
+
+	public String getOrderDetails() {
+		return orderDetails;
+	}
+
+	public void setOrderDetails(String orderDetails) {
+		this.orderDetails = orderDetails;
 	}
 
 	public double getTotalAmount() {
@@ -69,15 +77,6 @@ public class Order {
 		this.totalAmount = totalAmount;
 	}
 
-	public String getStatus() {
-		return status;
-	}
-
-	public void setStatus(String status) {
-		this.status = status;
-	}
-
-	// Getters and Setters
 	public String getPaymentMode() {
 		return paymentMode;
 	}
