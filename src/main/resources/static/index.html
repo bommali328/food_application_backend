@@ -19,9 +19,14 @@
         h2 { margin: 10px 0 5px 0; color: var(--primary); text-align: center; }
         .brand-subtitle { text-align: center; color: var(--accent); font-weight: bold; margin-bottom: 25px; }
         
-        /* Screens View Management */
-        .screen { display: none; }
-        .screen.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        /* Screens View Management - సింగిల్ పేజీ రూటింగ్ పక్కాగా రన్ అవ్వడానికి */
+        .screen { 
+            display: none !important; 
+        }
+        .screen.active { 
+            display: block !important; 
+            animation: fadeIn 0.4s ease-in-out; 
+        }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Page 1: Login Form */
@@ -100,6 +105,11 @@
         </div>
 
         <div class="form-group">
+            <label style="font-weight: bold;">📞 మొబైల్ నంబర్ (Mobile Number):</label>
+            <input type="text" id="customerMobile" placeholder="మీ మొబైల్ నెంబర్ ఎంటర్ చేయండి" value="9876543210">
+        </div>
+
+        <div class="form-group">
             <label style="font-weight: bold;">🏠 డెలివరీ చిరునామా (Delivery Address):</label>
             <textarea id="deliveryAddress" rows="2" placeholder="మీ పూర్తి అడ్రస్ ఇక్కడ రాయండి">Hyderabad</textarea>
         </div>
@@ -163,7 +173,6 @@
 </div>
 
 <script>
-    // 11 ఫుడ్ ఐటమ్స్ డేటా
     const foodItems = [
         { id: "item1", name: "నాటుకోడి పులుసు", price: 380 },
         { id: "item2", name: "రాగి సంకటి", price: 120 },
@@ -183,7 +192,6 @@
     let currentUser = "Naveen";
     let savedOrderResponse = null;
 
-    // ఐటమ్స్ ని స్క్రీన్ పై రెండర్ చేయడం
     const menuListDiv = document.getElementById("menuItemsList");
     foodItems.forEach(item => {
         quantities[item.id] = 0;
@@ -203,14 +211,12 @@
         menuListDiv.appendChild(div);
     });
 
-    // స్క్రీన్స్ మేనేజ్‌మెంట్ ఫంక్షన్
     function showScreen(screenId) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(screenId).classList.add('active');
         window.scrollTo(0,0);
     }
 
-    // Page 1 -> Login Action
     function handleLogin() {
         const user = document.getElementById("username").value;
         if (user.trim() !== "") {
@@ -228,7 +234,6 @@
         showScreen("page-login");
     }
 
-    // Qty update
     function updateQty(itemId, change) {
         if (quantities[itemId] + change >= 0) {
             quantities[itemId] += change;
@@ -245,11 +250,15 @@
         document.getElementById("totalDisplay").innerText = globalTotal;
     }
 
-    // Page 2 -> Go to Payment Page
     function goToPaymentPage() {
         const address = document.getElementById("deliveryAddress").value;
+        const mobile = document.getElementById("customerMobile").value;
         if (globalTotal === 0) {
             alert("దయచేసి మెనూ నుండి ఏదైనా ఒక ఐటమ్ సెలెక్ట్ చేసుకోండి!");
+            return;
+        }
+        if (!mobile.trim()) {
+            alert("దయచేసి మీ మొబైల్ నెంబర్ నమోదు చేయండి!");
             return;
         }
         if (!address.trim()) {
@@ -267,7 +276,6 @@
         }
     }
 
-    // Page 3 -> Execute Payment and Store Data (Same Time)
     function executePaymentProcess() {
         const mode = document.querySelector('input[name="paymentRadio"]:checked').value;
         const address = document.getElementById("deliveryAddress").value;
@@ -281,29 +289,26 @@
         const itemsSummary = orderedItems.join(", ");
 
         if (mode === "ONLINE") {
-            // 🔄 డయాగ్రామ్ ప్రకారం: UPI సెలెక్ట్ చేస్తే మొదట ఫోన్‌పే యాప్‌ను ట్రిగ్గర్ చేయడం
             const myUpiId = "nbommali52@ybl"; 
             const upiUrl = `upi://pay?pa=${myUpiId}&pn=NGFoods&am=${globalTotal}&cu=INR&tn=PalletooruRuchuluOrder`;
             
             window.location.href = upiUrl;
 
-            // 🔄 అదే సమయంలో (Same Time) బ్యాక్-ఎండ్ కి డేటా పంపి సేవ్ చేయడం
             setTimeout(() => {
                 saveOrderAndProceed(currentUser, address, itemsSummary, globalTotal, "ONLINE", "COMPLETED");
             }, 3000);
         } else {
-            // COD ఐతే డైరెక్ట్‌గా సేవింగ్
             saveOrderAndProceed(currentUser, address, itemsSummary, globalTotal, "COD", "PENDING");
         }
     }
 
-    // Spring Boot API కి డేటా పంపడం
     function saveOrderAndProceed(name, addr, items, total, payMode, payStatus) {
         const txnId = payMode === "ONLINE" ? "TXN" + Math.floor(100000 + Math.random() * 900000) : "N/A";
+        const mobile = document.getElementById("customerMobile").value;
 
         const payload = {
             customerName: name,
-            customerMobile: "9876543210", 
+            customerMobile: mobile, 
             address: addr,
             orderDetails: items,
             totalAmount: total,
@@ -312,7 +317,7 @@
             transactionId: txnId
         };
 
-        fetch('https://food-application-backend-1.onrender.com/api/orders', {
+        fetch('/api/orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -321,7 +326,6 @@
         .then(savedOrder => {
             savedOrderResponse = savedOrder;
             
-            // సేవ్ అయ్యాక సక్సెస్ స్క్రీన్ (Page 4) లో డేటా అప్‌డేట్ చేయడం
             document.getElementById("successOrderId").innerText = savedOrder.id;
             document.getElementById("successUser").innerText = name;
             document.getElementById("successItems").innerText = items;
@@ -336,14 +340,14 @@
         });
     }
 
-    // Page 4 -> WhatsApp Message Send (to Customer/Owner)
     function sendWhatsAppNotification() {
         if (!savedOrderResponse) return;
 
-        const ownerNumber = "919876543210"; // 👈 ఇక్కడ నీ నెంబర్ మార్చుకో నవీన్
+        const ownerNumber = "919876543210"; 
         const msg = `🔔 *పాలేటూరు రుచులు - కొత్త ఆర్డర్ వచ్చినది!* 🔔\n\n` +
                     `📝 *ఆర్డర్ ID:* #${savedOrderResponse.id}\n` +
                     `👤 *కస్టమర్ పేరు:* ${savedOrderResponse.customerName}\n` +
+                    `📞 *మొబైల్ నంబర్:* ${savedOrderResponse.customerMobile}\n` +
                     `🏠 *అడ్రస్:* ${savedOrderResponse.address}\n` +
                     `📦 *వంటకాలు:* ${savedOrderResponse.orderDetails}\n` +
                     `💰 *మొత్తం బిల్లు:* ₹${savedOrderResponse.totalAmount}/-\n` +
@@ -355,7 +359,6 @@
         window.location.href = `https://api.whatsapp.com/send?phone=${ownerNumber}&text=${encodeURIComponent(msg)}`;
     }
 
-    // చెక్ లాగిన్
     const savedUser = localStorage.getItem("loggedInUser");
     if(savedUser) {
         currentUser = savedUser;
