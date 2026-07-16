@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Owner Portal - NG Foods</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 font-sans min-h-screen flex flex-col items-center justify-center p-2 text-slate-800">
+
+	<div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col my-2" style="height: 800px;">
+		<div class="bg-amber-600 text-white p-4 text-center font-black uppercase shadow-md">NG Kitchen Owner Console</div>
+		
+		<div id="login-zone" class="p-6 space-y-4 my-auto">
+			<h2 class="text-center font-bold text-xs text-slate-600">ENTER PORTAL ACCESS CODE:</h2>
+			<input id="passcode-input" type="password" placeholder="••••••••" class="w-full border p-3 rounded-xl text-center text-lg font-bold outline-none">
+			<button onclick="verifyOwnerLogin()" class="w-full bg-amber-600 text-white font-bold py-3 rounded-xl text-sm uppercase">Authorize Login</button>
+		</div>
+
+		<div id="admin-zone" class="hidden flex-1 flex flex-col overflow-hidden">
+			<div class="flex-1 overflow-y-auto p-4 space-y-4" id="orders-container"></div>
+		</div>
+	</div>
+
+	<script>
+		function verifyOwnerLogin() {
+			if (document.getElementById('passcode-input').value.trim().toUpperCase() === 'ADMIN123') {
+				document.getElementById('login-zone').classList.add('hidden');
+				document.getElementById('admin-zone').classList.remove('hidden');
+				loadCloudOrders();
+			} else {
+				alert("Access Denied!");
+			}
+		}
+
+		function loadCloudOrders() {
+			const container = document.getElementById('orders-container');
+			container.innerHTML = '<p class="text-center text-xs text-slate-400">Loading dynamic registry container...</p>';
+
+			fetch('https://food-application-backend-1.onrender.com/api/orders')
+			.then(res => res.json())
+			.then(orders => {
+				container.innerHTML = '';
+				orders.reverse().forEach(order => {
+					container.innerHTML += `
+						<div class="bg-slate-50 p-4 rounded-2xl border space-y-2 shadow-xs">
+							<div class="flex justify-between items-center"><span class="text-xs font-black text-slate-800">Order Token: ${order.orderId}</span><span class="text-[9px] font-bold px-2 py-0.5 bg-amber-100 rounded text-amber-800 uppercase">${order.status}</span></div>
+							<p class="text-[11px] text-slate-500 font-bold">👤 ${order.customerName} | 📱 ${order.mobileNumber}</p>
+							<p class="text-[10px] text-slate-400 font-medium">📍 ${order.deliveryAddress}</p>
+							<div class="grid grid-cols-4 gap-1 pt-1.5">
+								<button onclick="updateStatus('${order.orderId}', 'Received')" class="bg-emerald-600 text-white text-[9px] font-bold py-1 rounded">Receive</button>
+								<button onclick="updateStatus('${order.orderId}', 'Accepted')" class="bg-amber-500 text-white text-[9px] font-bold py-1 rounded">Accept</button>
+								<button onclick="updateStatus('${order.orderId}', 'Dispatched')" class="bg-blue-500 text-white text-[9px] font-bold py-1 rounded">Ship</button>
+								<button onclick="updateStatus('${order.orderId}', 'Delivered')" class="bg-purple-600 text-white text-[9px] font-bold py-1 rounded">Deliver</button>
+							</div>
+						</div>`;
+				});
+			});
+		}
+
+		function updateStatus(orderId, status) {
+			fetch(`https://food-application-backend-1.onrender.com/api/orders/${orderId}/status?status=${status}`, { method: 'PUT' })
+			.then(() => loadCloudOrders());
+		}
+	</script>
+</body>
+</html>

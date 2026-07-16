@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Track Order - NG Foods</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 font-sans min-h-screen flex flex-col items-center justify-center p-2 text-slate-800">
+
+	<div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col my-2" style="height: 750px;">
+		<div class="bg-rose-600 text-white p-4 text-center shadow-md font-black uppercase">Live Order Tracking Pipeline</div>
+		
+		<div class="flex-1 overflow-y-auto p-4 space-y-6">
+			<div class="bg-slate-50 border p-4 rounded-2xl space-y-2">
+				<label class="text-xs font-bold text-slate-600 block">ENTER 6-DIGIT ORDER TOKEN ID:</label>
+				<div class="flex gap-2">
+					<input id="tracking-id-input" type="text" maxlength="6" placeholder="e.g. 543210" class="flex-1 border p-2 rounded-xl text-center font-bold tracking-widest text-gray-800 outline-none focus:border-rose-500">
+					<button onclick="searchLiveOrder()" class="bg-rose-600 text-white font-bold px-4 rounded-xl text-xs uppercase">Track</button>
+				</div>
+			</div>
+
+			<div id="tracking-board" class="hidden space-y-4">
+				<div class="text-center">
+					<div class="w-12 h-12 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-xl mx-auto"><i class="fa-solid fa-clock animate-pulse"></i></div>
+					<h3 id="order-id-label" class="text-sm font-black text-slate-700 mt-2">Order ID: ------</h3>
+					<p id="pipeline-timer" class="text-xs text-rose-600 font-bold">Status: Fetching...</p>
+				</div>
+
+				<div class="border p-4 rounded-2xl space-y-4 relative before:absolute before:bottom-2 before:top-2 before:left-3.5 before:w-0.5 before:bg-slate-100">
+					<div id="node-received" class="flex items-start gap-3 opacity-40"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold z-10 border-4 border-white">✓</div><div><p class="text-xs font-black">Order Received</p></div></div>
+					<div id="node-accepted" class="flex items-start gap-3 opacity-40"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold z-10 border-4 border-white"><i class="fa-solid fa-fire text-[9px]"></i></div><div><p class="text-xs font-black">Accepted & Preparing</p></div></div>
+					<div id="node-dispatched" class="flex items-start gap-3 opacity-40"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold z-10 border-4 border-white"><i class="fa-solid fa-motorcycle text-[9px]"></i></div><div><p class="text-xs font-black">Out for Delivery</p></div></div>
+					<div id="node-delivered" class="flex items-start gap-3 opacity-40"><div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-xs font-bold z-10 border-4 border-white"><i class="fa-solid fa-house text-[9px]"></i></div><div><p class="text-xs font-black">Delivered Safely</p></div></div>
+				</div>
+			</div>
+		</div>
+		<div class="p-4"><a href="index.html" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl text-center block text-xs uppercase">← Back to Menu</a></div>
+	</div>
+
+	<script>
+		window.addEventListener('DOMContentLoaded', () => {
+			const urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.has('order')) {
+				document.getElementById('tracking-id-input').value = urlParams.get('order');
+				searchLiveOrder();
+			}
+		});
+
+		function searchLiveOrder() {
+			const orderId = document.getElementById('tracking-id-input').value.trim();
+			if (orderId.length !== 6) return alert("Enter valid 6 digit ID");
+
+			fetch(`https://food-application-backend-1.onrender.com/api/orders/${orderId}`)
+			.then(res => { if(!res.ok) throw new Error(); return res.json(); })
+			.then(data => {
+				document.getElementById('tracking-board').classList.remove('hidden');
+				document.getElementById('order-id-label').innerText = `Order ID: ${orderId}`;
+				updateVisualTimeline(data.status);
+			})
+			.catch(() => alert("Order ID not found on Cloud Database Node!"));
+		}
+
+		function updateVisualTimeline(status) {
+			const timerLabel = document.getElementById('pipeline-timer');
+			const n1 = document.getElementById('node-received');
+			const n2 = document.getElementById('node-accepted');
+			const n3 = document.getElementById('node-dispatched');
+			const n4 = document.getElementById('node-delivered');
+
+			[n1, n2, n3, n4].forEach(n => n.classList.add('opacity-40'));
+
+			if (status === 'Received') {
+				timerLabel.innerText = "Status: Received"; n1.classList.remove('opacity-40');
+			} else if (status === 'Accepted') {
+				timerLabel.innerText = "Status: Preparing"; n1.classList.remove('opacity-40'); n2.classList.remove('opacity-40');
+			} else if (status === 'Dispatched') {
+				timerLabel.innerText = "Status: Dispatched"; n1.classList.remove('opacity-40'); n2.classList.remove('opacity-40'); n3.classList.remove('opacity-40');
+			} else if (status === 'Delivered') {
+				timerLabel.innerText = "Status: Completed"; [n1, n2, n3, n4].forEach(n => n.classList.remove('opacity-40'));
+			}
+		}
+	</script>
+</body>
+</html>
