@@ -12,6 +12,22 @@ import java.util.List;
 @CrossOrigin(origins = "*") // Render లో క్రాస్-ఆరిజిన్ ప్రాబ్లం రాకుండా
 public class OrderController {
 
+	// బ్రౌజర్ కి డైరెక్ట్ గా HTML ఫైల్స్ ని రూట్ చేయడం కోసం
+	@GetMapping("/login.html")
+	public String loginPage() {
+		return "forward:/login.html";
+	}
+
+	@GetMapping("/index.html")
+	public String indexPage() {
+		return "forward:/index.html";
+	}
+
+	@GetMapping("/owner.html")
+	public String ownerPage() {
+		return "forward:/owner.html";
+	}
+
 	@Autowired
 	private OrderRepository orderRepository;
 
